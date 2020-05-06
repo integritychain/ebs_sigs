@@ -191,8 +191,9 @@ class Fq12(Fq):
             o = other.q1 + other.q0
             res1 = (self.q0 + self.q1) * o - aa - bb
             res0 = bb.xx_mul_by_nonresidue() + aa
-            return Fq12(res1, res0)
-            # return Fq12(self.q1 * other.q0 + self.q0 * other.q1, self.q0 * other.q0 - self.q1 * other.q1)
+            # return Fq12(res1, res0)
+            return Fq12(self.q1 * other.q0 + self.q0 * other.q1, self.q0 * other.q0 + (self.q1 * other.q1).xx_mul_by_nonresidue())
+            # bad return Fq12(self.q1 * other.q0 + self.q0 * other.q1, self.q0 * other.q0 - self.q1 * other.q1)
         return NotImplemented
 
     # def __invert__(self):
