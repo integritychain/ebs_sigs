@@ -25,6 +25,17 @@ P = Point(x=Fq1(36), y=Fq1(60))
 Q = Point(x=Fq1(121), y=Fq1(387))
 S = Point(x=Fq1(0), y=Fq1(36))
 
+print("group1 = [", end='')
+for i in range(1,5):
+    g = Curve.multiply(P, i)
+    print("(Affine {:3} {:3}), ".format(g.x.q, g.y.q), end='')
+print("")
+
+print("group2 = [", end='')
+for i in range(1,5):
+    g = Curve.multiply(Q, i)
+    print("(Affine {:3} {:3}), ".format(g.x.q, g.y.q), end='')
+print("]")
 
 print("2. Testing Text p323...", end='')
 x1 = miller_loop(P, Curve.add(Q, S))

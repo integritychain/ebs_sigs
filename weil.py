@@ -18,10 +18,12 @@ def miller_loop(P, XXX):
     T = P
     f = 1
     for i in [0, 1]:  # TODO: NEED ORDER HERE
-        f = f * f * g_pq(T, T, XXX)
+        gtmp = g_pq(T, T, XXX)
+        f = f * f * gtmp
         T = Curve.multiply(T, 2)
         if i == 1:
-            f = f * g_pq(T, P, XXX)
+            g_tmp = g_pq(T, P, XXX)
+            f = f * g_tmp  # g_pq(T, P, XXX)
             T = Curve.add(T, P)
     return f
 

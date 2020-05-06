@@ -5,9 +5,8 @@ Point = namedtuple('Point', ['x', 'y'])
 
 
 class Curve:
-    # y^2 = x^3 + a * x + b
-
-    A, B = -1, -1  # Set correctly prior to use
+    # y^2 = x^3 + A * x + B
+    A, B = 0, 4
 
     @classmethod
     def set_a_b(cls, a, b):
@@ -35,8 +34,10 @@ class Curve:
     def double(cls, p):
         if p == "INFINITY": return "INFINITY"
         x1, y1 = p
-        x3 = ((3 * x1**2 + cls.A) // (2 * y1))**2 - 2 * x1
-        y3 = ((3 * x1**2 + cls.A) // (2 * y1)) * (x1 - x3) - y1
+        two = x1.const(2)
+        three = x1.const(3)
+        x3 = ((three * x1**2 + x1.const(cls.A)) // (two * y1))**2 - two * x1
+        y3 = ((three * x1**2 + x1.const(cls.A)) // (two * y1)) * (x1 - x3) - y1
         return Point(x3, y3)
 
     @classmethod
