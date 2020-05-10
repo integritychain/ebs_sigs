@@ -22,7 +22,7 @@ class Curve:
         x2, y2 = q
         if x1 == x2: return "INFINITY"
         x3 = ((y2 - y1) // (x2 - x1))**2 - x1 - x2
-        y3 = ((y2-y1) // (x2 - x1)) * (x1 - x3) - y1
+        y3 = ((y2 - y1) // (x2 - x1)) * (x1 - x3) - y1
         return Point(x3, y3)
 
     @classmethod

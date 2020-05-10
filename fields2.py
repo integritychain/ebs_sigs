@@ -1,4 +1,6 @@
 # Tower Fields for Fq1/2/6/12
+import copy
+from collections import namedtuple
 
 simple_invert = True  # watch out: terrible perf and need to set max recursion to just over 381 * 12
 
@@ -27,11 +29,26 @@ class Fq1:
         return NotImplemented
 
     def __sub__(self, other):
-        if isinstance(other, Fq1): return Fq1(self.q - other.q)
+        if type(other) is Fq1: return Fq1(self.q - other.q)
+        if isinstance(other, Fq12):
+            return   Fq12(Fq6(Fq2(Fq1(-other.q1.q2.q1.q), Fq1(- other.q1.q2.q0.q)),
+                              Fq2(Fq1(-other.q1.q1.q1.q), Fq1(- other.q1.q1.q0.q)),
+                              Fq2(Fq1(-other.q1.q0.q1.q), Fq1(- other.q1.q0.q0.q))),
+                          Fq6(Fq2(Fq1(-other.q0.q2.q1.q), Fq1(- other.q0.q2.q0.q)),
+                              Fq2(Fq1(-other.q0.q1.q1.q), Fq1(- other.q0.q1.q0.q)),
+                              Fq2(Fq1(-other.q0.q0.q1.q), Fq1(self.q - other.q0.q0.q0.q))))
+
         return NotImplemented
 
     def __mul__(self, other):
-        if isinstance(other, Fq1): return Fq1(self.q * other.q)
+        if type(other) is Fq1: return Fq1(self.q * other.q)
+        if isinstance(other, Fq12):
+            return   Fq12(Fq6(Fq2(Fq1(self.q * other.q1.q2.q1.q), Fq1(self.q * other.q1.q2.q0.q)),
+                              Fq2(Fq1(self.q * other.q1.q1.q1.q), Fq1(self.q * other.q1.q1.q0.q)),
+                              Fq2(Fq1(self.q * other.q1.q0.q1.q), Fq1(self.q * other.q1.q0.q0.q))),
+                          Fq6(Fq2(Fq1(self.q * other.q0.q2.q1.q), Fq1(self.q * other.q0.q2.q0.q)),
+                              Fq2(Fq1(self.q * other.q0.q1.q1.q), Fq1(self.q * other.q0.q1.q0.q)),
+                              Fq2(Fq1(self.q * other.q0.q0.q1.q), Fq1(self.q * other.q0.q0.q0.q))))
         return NotImplemented
 
     def __invert__(self):
@@ -200,3 +217,40 @@ class Fq12(Fq1):
 
 
 assert Fq1.PRIME == 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
+
+Point = namedtuple('Point', ['x', 'y'])
+
+def fq2_mul_fq12(fq2, fq12):
+    result = copy.deepcopy(fq12)
+    result.q1.q2 *= fq2
+    result.q1.q1 *= fq2
+    result.q1.q0 *= fq2
+    result.q0.q2 *= fq2
+    result.q0.q1 *= fq2
+    result.q0.q0 *= fq2
+    return result
+
+def untwist(point_fq2):
+    ut_root = Fq6(Fq2(Fq1(0x0), Fq1(0x0)), Fq2(Fq1(0x0), Fq1(1)), Fq2(Fq1(0x0), Fq1(0x0)))
+    fq6_zero = Fq6(Fq2(Fq1(0x0), Fq1(0x0)), Fq2(Fq1(0x0), Fq1(0x0)), Fq2(Fq1(0x0), Fq1(0x0)))
+    wsq = ~Fq12(fq6_zero, ut_root)   # Can be made a constant
+    wcu = ~Fq12(ut_root, fq6_zero)   # Can be made a constant
+    x_new = fq2_mul_fq12(point_fq2.x, wsq)
+    y_new = fq2_mul_fq12(point_fq2.y, wcu)
+    return Point(x=x_new, y=y_new)
+
+
+def deval(R, P):
+    rx2 = R.x * R.x
+    slope = (rx2 + rx2 + rx2) * (~(R.y + R.y))
+    v = R.y - slope * R.x
+    ret = P.y - P.x * slope - v
+    return ret
+
+    # # do everything projectively
+    # slope_num = 3 * pow(xR, 2)
+    # slope_den = 2 * yR * zR
+    # v_num = yR * slope_den - slope_num * xR * zR
+    # v_den = slope_den * zR3
+    # ret_num = yP * slope_den * zR3 - xP * slope_num * zR3 - v_num
+    # ret_den = v_den
